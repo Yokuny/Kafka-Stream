@@ -11,7 +11,7 @@ export const AppDataSource = new DataSource({
   password: env.POSTGRES_PASSWORD,
   database: env.POSTGRES_DB,
   ssl: env.POSTGRES_SSL,
-  synchronize: false,
+  synchronize: env.NODE_ENV === 'development',
   logging: env.CONSUMER_LOG_LEVEL === 'debug',
   entities: [SupportTicketEntity],
   migrations: [],

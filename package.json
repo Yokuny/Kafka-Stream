@@ -8,9 +8,12 @@
     "build": "pnpm -r build",
     "infra:up": "docker compose -f infra/docker-compose.yml up -d",
     "infra:down": "docker compose -f infra/docker-compose.yml down",
-    "topics:create": "node infra/create-topics.mjs"
+    "topics:create": "node infra/create-topics.mjs",
+    "lint": "biome check .",
+    "format": "biome format --write ."
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.9",
     "concurrently": "^8.2.2",
     "kafkajs": "^2.2.4"
   },

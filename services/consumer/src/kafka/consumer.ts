@@ -1,14 +1,11 @@
-import { Kafka, Consumer, EachMessagePayload } from "kafkajs";
-import { DataSource } from "typeorm";
-import { Env } from "../config/env.js";
+import { Consumer, type EachMessagePayload, Kafka } from 'kafkajs';
+import type { DataSource } from 'typeorm';
+import type { Env } from '../config/env.js';
 
-export const bootstrapConsumer = async (
-  env: Env,
-  dataSource: DataSource
-): Promise<{ disconnect: () => Promise<void> }> => {
+export const bootstrapConsumer = async (env: Env, dataSource: DataSource): Promise<{ disconnect: () => Promise<void> }> => {
   const kafka = new Kafka({
     clientId: env.KAFKA_CLIENT_ID,
-    brokers: env.KAFKA_BROKERS.split(","),
+    brokers: env.KAFKA_BROKERS.split(','),
   });
 
   const consumer = kafka.consumer({ groupId: env.KAFKA_GROUP_ID_CONSUMER });
@@ -22,9 +19,9 @@ export const bootstrapConsumer = async (
       const { topic, partition, message } = payload;
       const key = message.key?.toString();
       const value = message.value?.toString();
-      
+
       console.log(`[Consumer] Received message from ${topic}[${partition}]: ${key} = ${value}`);
-      
+
       // Add logic to process event and persist in dataSource here
     },
   });

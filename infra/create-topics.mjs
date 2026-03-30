@@ -12,7 +12,7 @@ const admin = kafka.admin();
 const createTopics = async () => {
   console.log('Connecting to Kafka admin...');
   await admin.connect();
-  
+
   const topics = [
     {
       topic: 'orders.created',
@@ -26,7 +26,10 @@ const createTopics = async () => {
     },
   ];
 
-  console.log('Creating topics:', topics.map(t => t.topic));
+  console.log(
+    'Creating topics:',
+    topics.map((t) => t.topic)
+  );
   await admin.createTopics({
     topics,
     waitForLeaders: true,

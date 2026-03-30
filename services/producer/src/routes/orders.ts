@@ -1,3 +1,4 @@
+import { OrderCreatedPayloadSchema } from '@kafka-stream/shared';
 import type { FastifyInstance } from 'fastify';
 import type { Producer } from 'kafkajs';
 import type { Env } from '../config/env.js';
@@ -5,9 +6,13 @@ import { buildOrderCreatedEvent, publishOrderCreated } from '../kafka/publisher.
 
 export const registerOrderRoutes = (app: FastifyInstance, producer: Producer, env: Env): void => {
   app.post('/orders', async (request, reply) => {
-    const payload = request.body;
+    const parsed = OrderCreatedPayloadSchema.safeParse(request.body);
 
-    const event = buildOrderCreatedEvent(payload);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Invalid payload', details: parsed.error.issues });
+    }
+
+    const event = buildOrderCreatedEvent(parsed.data);
 
     try {
       await publishOrderCreated(producer, env, event);

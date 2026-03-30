@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
+    "dev": "tsx watch --env-file=.env src/main.ts",
     "build": "tsc",
     "start": "node dist/main.js"
   },
   "dependencies": {
     "@kafka-stream/shared": "workspace:*",
     "fastify": "^4.27.0",
-    "@fastify/env": "^4.3.0",
+    "zod": "^3.23.8",
     "kafkajs": "^2.2.4",
     "uuid": "^9.0.1",
     "pino": "^9.1.0"

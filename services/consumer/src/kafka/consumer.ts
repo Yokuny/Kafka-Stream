@@ -1,8 +1,10 @@
-import { Consumer, type EachMessagePayload, Kafka } from 'kafkajs';
+import { type EachMessagePayload, Kafka } from 'kafkajs';
+import type { Logger } from 'pino';
 import type { DataSource } from 'typeorm';
 import type { Env } from '../config/env.js';
+import { parseOrderEvent } from './order.processor.js';
 
-export const bootstrapConsumer = async (env: Env, dataSource: DataSource): Promise<{ disconnect: () => Promise<void> }> => {
+export const bootstrapConsumer = async (env: Env, dataSource: DataSource, logger: Logger): Promise<{ disconnect: () => Promise<void> }> => {
   const kafka = new Kafka({
     clientId: env.KAFKA_CLIENT_ID,
     brokers: env.KAFKA_BROKERS.split(','),
@@ -17,12 +19,19 @@ export const bootstrapConsumer = async (env: Env, dataSource: DataSource): Promi
   await consumer.run({
     eachMessage: async (payload: EachMessagePayload) => {
       const { topic, partition, message } = payload;
-      const key = message.key?.toString();
-      const value = message.value?.toString();
 
-      console.log(`[Consumer] Received message from ${topic}[${partition}]: ${key} = ${value}`);
+      const result = parseOrderEvent(message.value?.toString());
 
-      // Add logic to process event and persist in dataSource here
+      if (!result.success) {
+        logger.error({ topic, partition, err: result.error.message }, 'Invalid message — schema validation failed');
+        return;
+      }
+
+      const event = result.data;
+      logger.info({ eventId: event.metadata.eventId, eventType: event.metadata.eventType, topic, partition }, 'Event received');
+
+      // TODO: persist event.payload via dataSource
+      void dataSource;
     },
   });
 

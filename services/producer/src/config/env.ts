@@ -1,23 +1,14 @@
-import { JSONSchemaType } from 'ajv';
+import { z } from 'zod';
 
-export interface Env {
-  PRODUCER_PORT: number;
-  PRODUCER_LOG_LEVEL: string;
-  KAFKA_BROKERS: string;
-  KAFKA_CLIENT_ID: string;
-  KAFKA_TOPIC_ORDERS: string;
-  KAFKA_TOPIC_ORDERS_DLQ: string;
-}
+const envSchema = z.object({
+  PRODUCER_PORT: z.coerce.number().int().default(3001),
+  PRODUCER_LOG_LEVEL: z.string().default('info'),
+  KAFKA_BROKERS: z.string(),
+  KAFKA_CLIENT_ID: z.string().default('kafka-stream-producer'),
+  KAFKA_TOPIC_ORDERS: z.string().default('orders.created'),
+  KAFKA_TOPIC_ORDERS_DLQ: z.string().default('orders.created.dlq'),
+});
 
-export const EnvSchema = {
-  type: 'object',
-  required: ['PRODUCER_PORT', 'KAFKA_BROKERS', 'KAFKA_CLIENT_ID', 'KAFKA_TOPIC_ORDERS', 'KAFKA_TOPIC_ORDERS_DLQ'],
-  properties: {
-    PRODUCER_PORT: { type: 'number', default: 3001 },
-    PRODUCER_LOG_LEVEL: { type: 'string', default: 'info' },
-    KAFKA_BROKERS: { type: 'string' },
-    KAFKA_CLIENT_ID: { type: 'string', default: 'kafka-stream-producer' },
-    KAFKA_TOPIC_ORDERS: { type: 'string', default: 'orders.created' },
-    KAFKA_TOPIC_ORDERS_DLQ: { type: 'string', default: 'orders.created.dlq' },
-  },
-};
+export type Env = z.infer<typeof envSchema>;
+
+export const env = envSchema.parse(process.env);

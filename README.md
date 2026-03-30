@@ -1,202 +1,89 @@
 # Kafka-Stream
 
-Monorepo de aprendizado e prática de **Apache Kafka** com boas práticas de mercado em 2026.
+O projeto é um MVP de arquitetura baseada em eventos (Event-Driven Architecture) utilizando node, monorepo (PNPM) e Kafka. A stack foca no ecossistema e ferramentas modernas para a separação de responsabilidades (comunicação assíncrona entre um produtor e um consumidor).
 
-Dois microsserviços Node.js + TypeScript integrados via Kafka: um **producer** expõe uma REST API e publica eventos; um **consumer** consome esses eventos e persiste no PostgreSQL via TypeORM.
+## 🚀 Arquitetura e como as partes se relacionam
 
----
+A estrutura adere a um padrão de **monorepo** isolado nos seguintes blocos lógicos:
 
-## Stack
+* **`packages/shared`**: 
+  Funciona como um contrato estrito entre os serviços. Exporta o tipo `KafkaEvent<T>`, além da estrutura funcional `Result<T,E>` para tratamento de erros puramente funcionais e o registro de tópicos do negócio. *Nenhum serviço depende de outro, apenas dependem do `shared`.*
+  
+* **`services/producer`**: 
+  Api REST usando *Fastify* rodando na porta `3001`. Recebe solicitações POST na rota `/orders`, valida a requisição, empacota em um evento formal de sistema (através da assinatura construída no *shared*) e **publica o evento** (`orders.created`) de forma idempotente para o Kafka.
+  > A chave de roteamento de particionamento da mensagem do Kafka é o `customerId` extraído do payload, preservando uma garantia de ordem no cluster por cliente.
+  
+* **`services/consumer`**: 
+  Um Worker puro que roda em background sem portas HTTP. Ouve continuamente o tópico `orders.created`, passando seus eventos por um pipeline funcional e salva de maneira final o pedido num banco local (PostgreSQL via TypeORM). Há implementações de *retry logging* (Exponencial) que enviam a mensagem estragada para um outro tópico, a DLQ (`orders.created.dlq`) caso falhe várias vezes.
 
-| Camada | Tecnologia |
-|---|---|
-| Runtime | Node.js 20+ |
-| Linguagem | TypeScript 5 (strict) |
-| Mensageria | Apache Kafka (KafkaJS) |
-| HTTP | Fastify |
-| ORM | TypeORM |
-| Banco | PostgreSQL 16 |
-| Infra local | Docker Compose |
-| Paradigma | Programação Funcional (Result type, pipe, sem mutação) |
-
----
-
-## Arquitetura
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Kafka-Stream Monorepo                │
-│                                                         │
-│  ┌──────────────┐   orders.created   ┌───────────────┐ │
-│  │   Producer   │ ─────────────────► │   Consumer    │ │
-│  │  (Fastify)   │                    │  (KafkaJS)    │ │
-│  │  :3001       │   orders.created   │               │ │
-│  │              │ ◄── DLQ ────────── │               │ │
-│  └──────────────┘    .dlq            └───────┬───────┘ │
-│                                              │         │
-│                                         TypeORM        │
-│                                              │         │
-│                                       ┌──────▼──────┐  │
-│                                       │  PostgreSQL │  │
-│                                       │  events     │  │
-│                                       │  orders     │  │
-│                                       └─────────────┘  │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Boas práticas implementadas
-
-- **Idempotência** — constraint `UNIQUE(topic, partition, offset)` na tabela `events` garante que mensagens reentregues não sejam processadas duas vezes
-- **Dead Letter Queue (DLQ)** — mensagens que falham após todos os retries vão para `orders.created.dlq` para inspeção e replay manual
-- **Exactly-once producer** — KafkaJS com `idempotent: true` evita duplicatas no broker
-- **Retry com backoff exponencial** — consumer não rejeita mensagens imediatamente; tenta novamente com delay crescente
-- **Graceful shutdown** — SIGTERM drena mensagens em vôo antes de fechar conexões
-- **Result type** — sem `throw` em fluxos esperados; erros são valores explícitos
-- **Partition key** — producer usa `customerId` como chave, garantindo ordem por cliente
-- **Auto-create topics desabilitado** — topics criados explicitamente com partições e retenção configuradas
-- **Transação no consumer** — audit log + persistência do pedido em uma única transação atômica
+* **`Infra`** (Docker Compose): 
+  O ambiente encapsulado de dependências: *Kafka*, *Zookeeper* (necessário para clusters gerenciarem brokers do Kafka), *PostgreSQL* para o banco de dados final e um painel visual do *Kafka UI* acessível para debugar eventos que passam pelo pipeline.
 
 ---
 
-## Estrutura do monorepo
+## 📦 Dependências Necessárias
 
+- [Node.js](https://nodejs.org/) (v20+ recomendado)
+- [PNPM](https://pnpm.io/) (v10+ recomendado)
+- [Docker](https://www.docker.com/) e Docker Compose
+
+---
+
+## 🔧 Como rodar o projeto
+
+**1.** Configure as dependências locais no workspace inteiro do PNPM:
+```bash
+pnpm install
 ```
-kafka-stream/
-├── packages/
-│   └── shared/               # Tipos, contratos e utilitários funcionais
-│       └── src/index.ts      # KafkaEvent, Result, Topics, pipe...
-├── services/
-│   ├── producer/             # Microsserviço HTTP → Kafka
-│   │   └── src/
-│   │       ├── config/env.ts
-│   │       ├── kafka/client.ts
-│   │       ├── kafka/publisher.ts
-│   │       ├── routes/orders.ts
-│   │       └── main.ts
-│   └── consumer/             # Microsserviço Kafka → PostgreSQL
-│       └── src/
-│           ├── config/env.ts
-│           ├── database/data-source.ts
-│           ├── entities/event.entity.ts
-│           ├── entities/order.entity.ts
-│           ├── repositories/order.repository.ts
-│           ├── processors/order.processor.ts
-│           ├── kafka/consumer.ts
-│           └── main.ts
-├── infra/
-│   ├── docker/
-│   │   ├── docker-compose.yml   # Kafka, Zookeeper, Schema Registry, PG, Kafka UI
-│   │   └── postgres/init.sql
-│   └── scripts/
-│       └── create-topics.mjs   # Cria os topics antes de subir os serviços
-├── tsconfig.base.json
-├── package.json                # npm workspaces
-└── .env.example
+
+**2.** Suba a infraestrutura do Datahub (Bancos e Kafka Node):
+```bash
+pnpm run infra:up
+```
+
+**3.** Crie os tópicos do Kafka (antes de colocar os serviços no ar):
+```bash
+pnpm run topics:create
+```
+
+**4.** Inicie o **Producer**:
+*Em um terminal, inicie o container da API rest (produtor)*
+```bash
+pnpm run dev:producer
+```
+
+**5.** Inicie o **Consumer**:
+*Em um segundo terminal, inicie o Worker de armazenamento*
+```bash
+pnpm run dev:consumer
 ```
 
 ---
 
-## Setup local
+## 🧪 Como testar e ver o que ele faz
 
-### Pré-requisitos
+Uma vez que toda a sua infraestrutura e ambos os serviços estão online, você pode despachar ordens de compras (Pedidos) e ver como o sistema age de forma interconectada por trás dos panos:
 
-- Node.js 20+
-- Docker e Docker Compose
-
-### 1. Clonar e instalar dependências
-
+**1. Faça uma API Request:**
+Em outro terminal paralelo ou utilizando alguma ferramenta como Postman/Insomnia/cURL, dispare a rota:
 ```bash
-git clone https://github.com/Yokuny/Kafka-Stream.git
-cd Kafka-Stream
-cp .env.example .env
-npm install
-```
-
-### 2. Subir a infra (Kafka + PostgreSQL)
-
-```bash
-npm run infra:up
-```
-
-Aguarde ~30 segundos para o Kafka ficar healthy, então:
-
-```bash
-# Criar os topics no Kafka
-node infra/scripts/create-topics.mjs
-```
-
-### 3. Rodar os serviços em modo dev
-
-```bash
-# Ambos simultaneamente
-npm run dev
-
-# Ou separados
-npm run dev:producer
-npm run dev:consumer
-```
-
-### 4. Testar
-
-```bash
-# Publicar um evento de pedido
 curl -X POST http://localhost:3001/orders \
-  -H "Content-Type: application/json" \
-  -d '{
-    "orderId": "order-001",
-    "customerId": "customer-abc",
-    "productId": "product-xyz",
-    "quantity": 2,
-    "amount": 149.90
-  }'
-
-# Health check
-curl http://localhost:3001/health
+-H "Content-Type: application/json" \
+-d '{
+  "customerId": "8f8e0b0e-6b99-4c3e-9bf8-9d8e7c6ac510",
+  "items": [
+    { "id": "pc-gamer", "amount": 1, "price": 4500 }
+  ],
+  "totalPrice": 4500
+}'
 ```
+*(O `customerId` é fundamental, pois ele atua servindo de Key de partições do Kafka).*
 
-### 5. Monitorar
+**2. Acompanhe a Viagem do Evento no Console:**
+- **Terminal do Producer**: Você deve conseguir ver a atividade do Fastify validando a requisição e mandando o evento pro ar junto de uma resposta HTTP 201 Created.
+- **Terminal do Consumer**: Assim que mandado pro ar, de forma instantânea o processo worker vai imprimir a captura da transação `orders.created` e processá-la. Caso a transação der erro transacional no banco, você vai conseguir perceber o algoritmo de retry tentando processar o evento multiplas vezes até jogá-lo na DLQ (Dead Letter Queue).
 
-- **Kafka UI**: http://localhost:8080 — visualize topics, mensagens, consumer groups
-- **Schema Registry**: http://localhost:8081
-
----
-
-## Fluxo de uma mensagem
-
-```
-POST /orders
-    │
-    ▼
-Producer valida body (AJV via Fastify)
-    │
-    ▼
-buildOrderCreatedEvent() — cria envelope com eventId (UUID), timestamp, version
-    │
-    ▼
-publishOrderCreated() — envia para orders.created com chave = customerId
-    │
-    ▼ (Kafka broker)
-    │
-    ▼
-Consumer recebe EachMessagePayload
-    │
-    ├─► parseOrderEvent()       — parse JSON → Result<OrderCreatedEvent>
-    ├─► validateOrderPayload()  — valida campos → Result<OrderCreatedEvent>
-    │
-    ▼ (transação PostgreSQL)
-    ├─► insertEventRecord()     — salva audit log (idempotency guard)
-    ├─► upsertOrder()           — persiste pedido
-    └─► updateEventStatus()     — marca como "processed"
-    
-    Em caso de falha → retry com backoff → DLQ
-```
-
----
-
-## Próximos passos (Fases seguintes)
-
-- [ ] **Fase 3** — Migrations TypeORM (substituir init.sql)
-- [ ] **Fase 4** — Testes de integração com Testcontainers
-- [ ] **Fase 5** — Schema Registry com Avro (serialização tipada)
-- [ ] **Fase 6** — Observabilidade: OpenTelemetry + traces distribuídos
-- [ ] **Fase 7** — Docker multi-stage build + Dockerfile para cada serviço
+**3. Teste usando visualizações (Kafka UI & Database):**
+Você pode acompanhar em TEMPO REAL através da Web as publicações e as tabelas:
+- Abra seu navegador no painel [http://localhost:8080](http://localhost:8080) (`Kafka UI`). Vá no cluster mapeado em **Topics** e abra o `orders.created`. Navegue para a tab **Messages** e lá estará o seu evento rastreável listado!
+- Você pode se conectar ao BD PostgreSQL no `localhost:5432` com as credenciais configuradas (`kafkastream`:`kafkastream`) usando seu cliente SQL preferido para confirmar se o consumo gerou dados materializados.

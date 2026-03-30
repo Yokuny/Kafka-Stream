@@ -1,8 +1,8 @@
-import { type KafkaEvent, Topics } from '@kafka-stream/shared';
+import type { KafkaEvent, OrderCreatedPayload } from '@kafka-stream/shared';
 import type { Producer } from 'kafkajs';
 import type { Env } from '../config/env.js';
 
-export const buildOrderCreatedEvent = (payload: any): KafkaEvent => {
+export const buildOrderCreatedEvent = (payload: OrderCreatedPayload): KafkaEvent<OrderCreatedPayload> => {
   return {
     metadata: {
       eventId: crypto.randomUUID(),
@@ -15,7 +15,7 @@ export const buildOrderCreatedEvent = (payload: any): KafkaEvent => {
   };
 };
 
-export const publishOrderCreated = async (producer: Producer, env: Env, event: KafkaEvent): Promise<void> => {
+export const publishOrderCreated = async (producer: Producer, env: Env, event: KafkaEvent<OrderCreatedPayload>): Promise<void> => {
   await producer.send({
     topic: env.KAFKA_TOPIC_ORDERS,
     messages: [

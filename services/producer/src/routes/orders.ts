@@ -6,11 +6,6 @@ import type { Env } from '../config/env.js';
 import { buildOrderCreatedEvent, publishOrderCreated } from '../kafka/publisher.js';
 import { validBody } from '../middlewares/index.js';
 
-export interface RouteOptions {
-  producer: Producer;
-  env: Env;
-}
-
 export const ordersRoute: FastifyPluginAsync<RouteOptions> = async (app, options) => {
   const { producer, env } = options;
 
@@ -30,3 +25,8 @@ export const ordersRoute: FastifyPluginAsync<RouteOptions> = async (app, options
     }
   });
 };
+
+export interface RouteOptions {
+  producer: Producer;
+  env: Env;
+}

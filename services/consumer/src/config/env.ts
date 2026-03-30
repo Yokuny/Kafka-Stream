@@ -3,8 +3,8 @@ import { z } from 'zod';
 const envSchema = z.object({
   NODE_ENV: z.string().default('development'),
   KAFKA_BROKERS: z.string(),
-  KAFKA_CLIENT_ID: z.string().default('kafka-stream-consumer'),
-  KAFKA_GROUP_ID_CONSUMER: z.string().default('kafka-stream-consumer-group'),
+  KAFKA_CLIENT_ID: z.string().default('producer-name'),
+  KAFKA_GROUP_ID_CONSUMER: z.string().default('consumer-group-name'),
   KAFKA_TOPIC_ORDERS: z.string().default('orders.created'),
   KAFKA_TOPIC_ORDERS_DLQ: z.string().default('orders.created.dlq'),
   POSTGRES_HOST: z.string().default('localhost'),

@@ -13,9 +13,5 @@ export const parseOrderEvent = (raw: string | null | undefined): Result<OrderCre
 
   const result = OrderCreatedEventSchema.safeParse(parsed);
 
-  if (!result.success) {
-    return err(new Error(`Schema validation failed: ${result.error.message}`));
-  }
-
   return ok(result.data as OrderCreatedEvent);
 };

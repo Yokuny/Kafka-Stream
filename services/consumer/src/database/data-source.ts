@@ -11,7 +11,7 @@ export const createDataSource = (env: Env): DataSource => {
     password: env.POSTGRES_PASSWORD,
     database: env.POSTGRES_DB,
     ssl: env.POSTGRES_SSL,
-    synchronize: false, // Use migrations in production!
+    synchronize: false,
     logging: env.CONSUMER_LOG_LEVEL === 'debug',
     entities: [
       // entities will be added here

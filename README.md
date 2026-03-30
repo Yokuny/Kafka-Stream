@@ -1,4 +1,4 @@
-# Kafka-Stream
+# SupportTicket-Stream
 
 O projeto é um MVP de arquitetura baseada em eventos (Event-Driven Architecture) utilizando node, monorepo (PNPM) e Kafka. A stack foca no ecossistema e ferramentas modernas para a separação de responsabilidades (comunicação assíncrona entre um produtor e um consumidor).
 

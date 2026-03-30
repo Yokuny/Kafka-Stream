@@ -3,7 +3,7 @@ version: '3.8'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
-    container_name: kafka-stream-zookeeper
+    container_name: support-ticket-stream-zookeeper
     restart: unless-stopped
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -11,11 +11,11 @@ services:
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "2181"]
     networks:
-      - kafka-stream-net
+      - support-ticket-stream-net
 
   kafka:
     image: confluentinc/cp-kafka:7.6.0
-    container_name: kafka-stream-broker
+    container_name: support-ticket-stream-broker
     restart: unless-stopped
     depends_on:
       zookeeper:
@@ -33,11 +33,11 @@ services:
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
     networks:
-      - kafka-stream-net
+      - support-ticket-stream-net
 
   postgres:
     image: postgres:16-alpine
-    container_name: kafka-stream-postgres
+    container_name: support-ticket-stream-postgres
     restart: unless-stopped
     ports:
       - "5432:5432"
@@ -49,11 +49,11 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - kafka-stream-net
+      - support-ticket-stream-net
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
-    container_name: kafka-stream-ui
+    container_name: support-ticket-stream-ui
     restart: unless-stopped
     depends_on:
       kafka:
@@ -61,14 +61,14 @@ services:
     ports:
       - "8080:8080"
     environment:
-      KAFKA_CLUSTERS_0_NAME: kafka-stream-local
+      KAFKA_CLUSTERS_0_NAME: support-ticket-stream-local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
     networks:
-      - kafka-stream-net
+      - support-ticket-stream-net
 
 volumes:
   postgres-data:
 
 networks:
-  kafka-stream-net:
+  support-ticket-stream-net:
     driver: bridge

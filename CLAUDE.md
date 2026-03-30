@@ -1,4 +1,4 @@
-# Kafka-Stream — Arquitetura e Convenções
+# SupportTicket-Stream — Arquitetura e Convenções
 
 ## Visão Geral
 
@@ -155,7 +155,7 @@ pnpm run lint             # Lint com Biome
 
 ## Shared Package
 
-O pacote `@kafka-stream/shared` é o contrato entre producer e consumer. Nunca importe diretamente entre os serviços — use apenas o shared.
+O pacote `@support-ticket-stream/shared` é o contrato entre producer e consumer. Nunca importe diretamente entre os serviços — use apenas o shared.
 
 ```
 packages/shared/src/

@@ -1,4 +1,4 @@
-import { SupportTicketPayloadSchema } from '@kafka-stream/shared';
+import { SupportTicketPayloadSchema } from '@support-ticket-stream/shared';
 import type { FastifyPluginAsync } from 'fastify';
 import type { Producer } from 'kafkajs';
 import type { z } from 'zod';

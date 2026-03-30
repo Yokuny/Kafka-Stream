@@ -1,4 +1,4 @@
-import type { KafkaEvent, SupportTicketPayload } from '@kafka-stream/shared';
+import type { KafkaEvent, SupportTicketPayload } from '@support-ticket-stream/shared';
 import type { Producer } from 'kafkajs';
 import type { Env } from '../config/env.js';
 

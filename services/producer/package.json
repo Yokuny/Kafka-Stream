@@ -1,5 +1,5 @@
 {
-  "name": "@kafka-stream/producer",
+  "name": "@support-ticket-stream/producer",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
@@ -8,7 +8,7 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "@kafka-stream/shared": "workspace:*",
+    "@support-ticket-stream/shared": "workspace:*",
     "fastify": "^4.27.0",
     "zod": "^3.23.8",
     "kafkajs": "^2.2.4",

@@ -1,5 +1,5 @@
 {
-  "name": "@kafka-stream/shared",
+  "name": "@support-ticket-stream/shared",
   "version": "1.0.0",
   "type": "module",
   "exports": {

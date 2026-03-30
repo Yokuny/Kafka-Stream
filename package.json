@@ -1,10 +1,10 @@
 {
-  "name": "kafka-stream",
+  "name": "support-ticket-stream",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev:producer": "pnpm --filter @kafka-stream/producer dev",
-    "dev:consumer": "pnpm --filter @kafka-stream/consumer dev",
+    "dev:producer": "pnpm --filter @support-ticket-stream/producer dev",
+    "dev:consumer": "pnpm --filter @support-ticket-stream/consumer dev",
     "build": "pnpm -r build",
     "infra:up": "docker compose -f infra/docker-compose.yml up -d",
     "infra:down": "docker compose -f infra/docker-compose.yml down",

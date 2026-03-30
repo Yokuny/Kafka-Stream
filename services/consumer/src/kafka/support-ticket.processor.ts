@@ -1,5 +1,5 @@
-import type { Result, SupportTicketCreatedEvent } from '@kafka-stream/shared';
-import { err, ok, SupportTicketCreatedEventSchema } from '@kafka-stream/shared';
+import type { Result, SupportTicketCreatedEvent } from '@support-ticket-stream/shared';
+import { err, ok, SupportTicketCreatedEventSchema } from '@support-ticket-stream/shared';
 
 export const parseSupportTicketEvent = (raw: string | null | undefined): Result<SupportTicketCreatedEvent> => {
   if (!raw) return err(new Error('Empty message value'));

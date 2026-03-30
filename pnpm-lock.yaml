@@ -30,7 +30,7 @@ importers:
 
   services/consumer:
     dependencies:
-      '@kafka-stream/shared':
+      '@support-ticket-stream/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       kafkajs:
@@ -70,7 +70,7 @@ importers:
 
   services/producer:
     dependencies:
-      '@kafka-stream/shared':
+      '@support-ticket-stream/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       fastify:

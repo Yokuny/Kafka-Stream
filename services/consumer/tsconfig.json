@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "paths": {
-      "@kafka-stream/shared": ["../../packages/shared/src/index.ts"]
+      "@support-ticket-stream/shared": ["../../packages/shared/src/index.ts"]
     }
   },
   "include": ["src/**/*", "../../packages/shared/src/**/*"]
